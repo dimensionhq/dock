@@ -6,6 +6,17 @@ description = "The simple, fast and powerful command line parser"
 license = "Apache-2.0"
 repository = "https://github.com/dimensionhq/dock"
 homepage = "dock.dev"
+authors = ["dimensionhq"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
+human-panic = "1.0.3"
+ansi_term = "0.12.1"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.toml]
+version = "0.5.9"
+features = ["preserve_order"]
