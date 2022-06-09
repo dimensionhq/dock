@@ -1,14 +1,10 @@
-#![allow(unused, dead_code)]
-
 use crate::core::config::AppConfig;
-use human_panic::setup_panic;
-use std::fs;
 
 /// Represents a Dock application
 ///
-/// A `App` instance is used to build and run a command line application from start to finish.
+/// An `App` instance is used to build and run a command line application from start to finish.
 ///
-/// When a Dock app is initialized, by default, human_panic handler is set and on windows, an attempt to enable ansi support is made.
+/// When a Dock app is initialized, by default, an attempt to enable ansi support is made.
 ///
 /// The suggested approach is to use the [`App::from_crate`] constructor to automatically build an application based on the crate config.
 /// ```rsmno_run
@@ -22,17 +18,15 @@ use std::fs;
 /// However, it can be set manually and built by each stage using their respective config setters.
 ///
 /// ```rs,no_run
-/// fn main(){
 ///     App::new()
 ///         .set_name("Dock")
 ///         .run()
-/// }
 /// ```
 ///  
 /// The command line application starts when the [`App::run()`] method is called.
 #[derive(Debug, Clone)]
 pub struct App {
-    pub config: AppConfig,
+    pub(crate) config: AppConfig,
 }
 
 impl Default for App {
@@ -44,11 +38,9 @@ impl Default for App {
 }
 
 impl App {
-    /// The setup function called when a application is initialized.
+    /// The setup function called when an application is initialized.
     /// This performs all the preliminary setup required to make sure the Dock application sails smoothly.
     fn setup() {
-        setup_panic!();
-
         #[cfg(windows)]
         let _ = ansi_term::enable_ansi_support();
     }
@@ -56,15 +48,17 @@ impl App {
     /// Manual constructor
     ///
     /// All the config values should be set manually using the respective config setters
+    #[must_use]
     pub fn new() -> Self {
         App::setup();
 
-        Default::default()
+        Self::default()
     }
 
     /// Preferred constructor
     ///
     /// All the config values are automatically taken from the crate's `Config.toml` to build the application.
+    #[must_use]
     pub fn from_crate() -> Self {
         App::setup();
 
@@ -77,6 +71,7 @@ impl App {
     /// Property setter
     ///
     /// Sets the name of the application
+    #[must_use]
     pub fn set_name(mut self, name: &str) -> Self {
         self.config.name = Some(name.to_string());
 
@@ -86,6 +81,7 @@ impl App {
     /// Property setter
     ///
     /// Sets the description of the application
+    #[must_use]
     pub fn set_description(mut self, description: &str) -> Self {
         self.config.description = Some(description.to_string());
 
@@ -95,12 +91,24 @@ impl App {
     /// Property setter
     ///
     /// Sets the authors of the application
+    #[must_use]
     pub fn set_authors(mut self, authors: Vec<String>) -> Self {
         self.config.authors = Some(authors);
 
         self
     }
 
+    /// Property setter
+    ///
+    /// Sets the version of the application
+    #[must_use]
+    pub fn set_version(mut self, version: &str) -> Self {
+        self.config.version = Some(version.to_string());
+
+        self
+    }
+
+    #[allow(unused_mut)]
     pub fn register_command(mut self) -> Self {
         todo!()
     }
@@ -120,14 +128,19 @@ mod app_tests {
         let app = App::new()
             .set_name("Dock-test")
             .set_description("Dock unit test application")
-            .set_authors(vec!["Ferris".to_string()]);
+            .set_authors(vec!["Ferris".to_string()])
+            .set_version("1.2.3");
 
         assert_eq!(app.config.name.as_ref().unwrap(), &"Dock-test".to_string());
         assert_eq!(
             app.config.description.as_ref().unwrap(),
             &"Dock unit test application".to_string()
         );
-        assert_eq!(app.config.authors.as_ref().unwrap(), &vec!["Ferris".to_string()]);
+        assert_eq!(
+            app.config.authors.as_ref().unwrap(),
+            &vec!["Ferris".to_string()]
+        );
+        assert_eq!(app.config.version.as_ref().unwrap(), &"1.2.3".to_string());
     }
 
     #[test]
@@ -142,6 +155,7 @@ mod app_tests {
             &"Dock unit test application".to_string()
         );
         assert_eq!(app.config.authors.as_ref(), None);
+        assert_eq!(app.config.version.as_ref(), None);
     }
 
     #[test]
@@ -153,6 +167,10 @@ mod app_tests {
             app.config.description.as_ref().unwrap(),
             &"The simple, fast and powerful command line parser".to_string()
         );
-        assert_eq!(app.config.authors.as_ref().unwrap(), &vec!["dimensionhq".to_string()]);
+        assert_eq!(
+            app.config.authors.as_ref().unwrap(),
+            &vec!["dimensionhq".to_string()]
+        );
+        assert_eq!(app.config.version.as_ref().unwrap(), &"0.1.0".to_string());
     }
 }
